@@ -8,6 +8,7 @@ import { Movie } from "../types/moviesData";
 import axios from "axios";
 import { useStoreSelector } from "../redux/hooks";
 import Swal from "sweetalert2";
+import Pagination from "../components/Pagination";
 
 function MovieList() {
   const [movies, setMovies] = useState<Movie[] | undefined>(undefined);
@@ -16,21 +17,31 @@ function MovieList() {
   const modalBgRef = useRef<HTMLDivElement>(null);
   const [selectedMovieId, setSelectedMovieId] = useState<string | null>(null);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+
   const getMovies = async () => {
     try {
       const url = `${import.meta.env.VITE_REACT_APP_API_URL}/movie/`;
-      const result = await axios.get(url);
 
-      const filteredMovies = result.data.data.filter((movie: Movie) => movie.is_deleted === false);
+      const params = {
+        page: currentPage,
+      };
+
+      const result = await axios.get(url, {params});
+
+      const filteredMovies = result.data.data.filter((movie: Movie) => movie.is_deleted === false);      
 
       setMovies(filteredMovies);
+      setTotalPages(result.data.meta.totalPage);
     } catch (error) {
       console.log(error);
+      setTotalPages(0);
     }
   };
   useEffect(() => {
     getMovies();
-  }, []);
+  }, [currentPage]);
 
   const deleteMovie = async (id: string) => {
     try {
@@ -71,6 +82,10 @@ function MovieList() {
       });
       console.log(err);
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   const handleDelete = (id: string) => {
@@ -134,7 +149,9 @@ function MovieList() {
                 {movies.length > 0 ? (
                   movies?.map((movie, index) => (
                     <tr key={movie.id} className="border-t">
-                      <td className="px-4 py-2">{index + 1}</td>
+                      <td className="px-4 py-2">{(currentPage - 1) * 10 + index + 1}
+                        {/* {index + 1} */}
+                      </td>
                       <td className="px-4 py-2">
                         <img src={movie.image} alt={movie.title} className="w-16 md:w-20 h-16 md:h-20 object-cover rounded-2xl" />
                       </td>
@@ -173,6 +190,11 @@ function MovieList() {
               </tbody>
             </table>
           </div>
+          <Pagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}        
+          />
         </div>
       </section>
       {showModal && (
@@ -191,6 +213,7 @@ function MovieList() {
           </div>
         </div>
       )}
+      
     </main>
   );
 }

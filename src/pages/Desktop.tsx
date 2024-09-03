@@ -5,6 +5,7 @@ import MovieCard from "../components/MovieCard";
 import Newsletter from "../components/NewsLetter";
 import axios from "axios";
 import { Movie } from "../types/moviesData";
+import Pagination from "../components/Pagination";
 
 
 function Home() {
@@ -12,6 +13,9 @@ function Home() {
   const genreListes = ["Thriller", "Horror", "Romantic", "Adventure", "Sci-Fi"];
   const [genresSelected, setGenres] = useState<{genre: string}[]>([]);
   const [Search, setSearch] = useState("")
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
     const asyncFunctest = async () => {
@@ -21,18 +25,24 @@ function Home() {
         const params = {
           ...(genreNames ? { genres: genreNames } : {}),
           ...(Search ? { name: Search } : {}),
+          page: currentPage,
         };
         const result = await axios.get(url, { params });
         console.log(params)
         setMovies(result.data.data);
+        setTotalPages(result.data.meta.totalPage);
       } catch (error) {
         setMovies(undefined);
+        setTotalPages(0);
       }
     };
 
     asyncFunctest();
-  }, [genresSelected, Search]);
+  }, [genresSelected, Search, currentPage]);
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   const SetgenreMoviecards = (genre: string) => {
     if (genresSelected.some((g) => g.genre === genre)) {
@@ -92,11 +102,11 @@ function Home() {
         <h3 className="self-center mt-3.5 text-3xl tracking-wider leading-10 text-center text-neutral-900">Exciting Movies That Should Be Watched Today</h3>
       </div>
       <MovieCard movies={movies} />
-      {/* <Pagination
-              currentPage={currentPage}
-              totalPages={Math.ceil(movieData.cinemas.length / 4)}
-              onPageChange={handlePageChange}
-            /> */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
       <Newsletter />
     </section>
   );
