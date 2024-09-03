@@ -17,8 +17,6 @@ function Home() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
 
-  const limit: number = 4;
-
   useEffect(() => {
     const asyncFunctest = async () => {
       try {
@@ -28,12 +26,11 @@ function Home() {
           ...(genreNames ? { genres: genreNames } : {}),
           ...(Search ? { name: Search } : {}),
           page: currentPage,
-          limit: limit,
         };
         const result = await axios.get(url, { params });
         console.log(params)
         setMovies(result.data.data);
-        setTotalPages(Math.ceil(result.data.meta.totalData / limit));
+        setTotalPages(result.data.meta.totalPage);
       } catch (error) {
         setMovies(undefined);
         setTotalPages(0);
@@ -106,10 +103,10 @@ function Home() {
       </div>
       <MovieCard movies={movies} />
       <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-            />
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
       <Newsletter />
     </section>
   );
